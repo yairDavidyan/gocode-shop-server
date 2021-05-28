@@ -3,11 +3,17 @@ const app = express();
 const fs = require("fs");
 app.use(express.json());
 
-//filter by category
-app.get("/product/:category", (req, res) => {
+function readProduct(callback) {
   fs.readFile("product.json", "utf8", (err, products) => {
     const productArr = JSON.parse(products);
-    const { category } = req.params;
+    callback(productArr);
+  });
+}
+
+//filter by category
+app.get("/product/:category", (req, res) => {
+  const { category } = req.params;
+  readProduct((productArr) => {
     if (category) {
       const categoryProduct = productArr.filter((item) => {
         return item.category === category;
@@ -21,9 +27,8 @@ app.get("/product/:category", (req, res) => {
 
 //filter by id
 app.get("/product/:id", (req, res) => {
-  fs.readFile("product.json", "utf8", (err, products) => {
-    const productArr = JSON.parse(products);
-    const product = productArr.find((item) => item.id === +req.params.id);
+  readProduct((products) => {
+    const product = products.find((item) => item.id === +req.params.id);
     if (product) {
       res.send(product);
     } else {
@@ -35,9 +40,8 @@ app.get("/product/:id", (req, res) => {
 
 //filter by title search
 app.get("/product", (req, res) => {
-  const { title } = req.query;
-  fs.readFile("product.json", "utf8", (err, products) => {
-    const productArr = JSON.parse(products);
+  readProduct((productArr) => {
+    const { title } = req.query;
     if (title) {
       const updateArr = productArr.filter((item) => item.title.includes(title));
       res.send(updateArr ? updateArr : "no data");
@@ -49,8 +53,7 @@ app.get("/product", (req, res) => {
 
 //add new product
 app.post("/product", (req, res) => {
-  fs.readFile("product.json", "utf8", (err, products) => {
-    const productArr = JSON.parse(products);
+  readProduct((productArr) => {
     productArr.push({
       id: productArr.length + 1,
       title: req.body.title,
@@ -59,41 +62,40 @@ app.post("/product", (req, res) => {
       category: "men's clothing",
       image: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
     });
-
-    fs.writeFile("product.json", JSON.stringify(productArr), (err) => {
-      console.log(err);
-      res.send("yes");
-    });
+  });
+  fs.writeFile("product.json", JSON.stringify(productArr), (err) => {
+    console.log(err);
+    res.send("yes");
   });
 });
 
 //update product
 app.put("/product/:id", (req, res) => {
-  fs.readFile("product.json", "utf8", (err, products) => {
-    const productArr = JSON.parse(products);
+  readProduct((productArr) => {
     const { id } = req.params;
     const { title, price, category, description, image } = req.body;
-    const updateArr = productArr.map((item) => {
-      return item.id === +id
+    const updateArr = productArr.map((item) =>
+      item.id === +id
         ? {
-            ...item,
-            title,
             price: price ? price : item.price,
+            title: title ? title : item.title,
+            category: category ? category : item.category,
+            description: description ? description : item.description,
+            image: image ? image : item.image,
           }
-        : item;
-    });
-    fs.writeFile("product.json", JSON.stringify(updateArr), (err) => {
-      console.log(err);
-      res.send("yes");
-    });
+        : item
+    );
+  });
+
+  fs.writeFile("product.json", JSON.stringify(updateArr), (err) => {
+    console.log(err);
+    res.send("yes");
   });
 });
 
 //dalete product
 app.delete("/product/:id", (req, res) => {
-  fs.readFile("product.json", "utf8", (err, products) => {
-    const productArr = JSON.parse(products);
-
+  readProduct((productArr) => {
     const updateArr = productArr.filter((item) => item.id !== +req.params.id);
     fs.writeFile("product.json", JSON.stringify(updateArr), (err) => {
       console.log(err);
