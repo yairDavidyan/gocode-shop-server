@@ -15,6 +15,7 @@ function writeProduct(products) {
     console.log(err);
   });
 }
+
 //filter by id
 app.get("/product/:id", (req, res) => {
   readProduct((products) => {
@@ -32,7 +33,6 @@ app.get("/product/:id", (req, res) => {
 app.get("/product", (req, res) => {
   readProduct((productArr) => {
     const { q } = req.query;
-    console.log(q);
     if (q) {
       let updateArr = productArr.filter(
         (item) => item.title.includes(q) || item.description.includes(q)
@@ -77,7 +77,6 @@ app.put("/product/:id", (req, res) => {
           }
         : item
     );
-    console.log(updateArr);
     writeProduct(updateArr);
     res.send("success");
   });
@@ -90,5 +89,22 @@ app.delete("/product/:id", (req, res) => {
     writeProduct(updateArr);
   });
 });
+// filter by slider
+// app.get("/product", (req, res) => {
+//   readProduct((products) => {
+//     const min = 100;
+//     const max = 1000;
+
+//     const product = products.filter(
+//       (item) => item.price >= min && item.price <= max
+//     );
+//     if (product) {
+//       res.send(product);
+//     } else {
+//       res.status(404);
+//       res.send();
+//     }
+//   });
+// });
 
 app.listen(8080);
