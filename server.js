@@ -10,21 +10,11 @@ function readProduct(callback) {
   });
 }
 
-//filter by category
-app.get("/product/:category", (req, res) => {
-  const { category } = req.params;
-  readProduct((productArr) => {
-    if (category) {
-      const categoryProduct = productArr.filter((item) => {
-        return item.category === category;
-      });
-      res.send(categoryProduct);
-    } else {
-      res.send("non category");
-    }
+function writeProduct(products) {
+  fs.writeFile("product.json", JSON.stringify(products), (err) => {
+    console.log(err);
   });
-});
-
+}
 //filter by id
 app.get("/product/:id", (req, res) => {
   readProduct((products) => {
@@ -41,12 +31,15 @@ app.get("/product/:id", (req, res) => {
 //filter by title search
 app.get("/product", (req, res) => {
   readProduct((productArr) => {
-    const { title } = req.query;
-    if (title) {
-      const updateArr = productArr.filter((item) => item.title.includes(title));
+    const { q } = req.query;
+    console.log(q);
+    if (q) {
+      let updateArr = productArr.filter(
+        (item) => item.title.includes(q) || item.description.includes(q)
+      );
       res.send(updateArr ? updateArr : "no data");
     } else {
-      res.send(products);
+      res.send(productArr);
     }
   });
 });
@@ -62,21 +55,20 @@ app.post("/product", (req, res) => {
       category: "men's clothing",
       image: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
     });
-  });
-  fs.writeFile("product.json", JSON.stringify(productArr), (err) => {
-    console.log(err);
-    res.send("yes");
+    writeProduct(productArr);
+    res.send("success");
   });
 });
 
 //update product
 app.put("/product/:id", (req, res) => {
+  const { id } = req.params;
+  const { title, price, category, description, image } = req.body;
   readProduct((productArr) => {
-    const { id } = req.params;
-    const { title, price, category, description, image } = req.body;
     const updateArr = productArr.map((item) =>
       item.id === +id
         ? {
+            id,
             price: price ? price : item.price,
             title: title ? title : item.title,
             category: category ? category : item.category,
@@ -85,11 +77,9 @@ app.put("/product/:id", (req, res) => {
           }
         : item
     );
-  });
-
-  fs.writeFile("product.json", JSON.stringify(updateArr), (err) => {
-    console.log(err);
-    res.send("yes");
+    console.log(updateArr);
+    writeProduct(updateArr);
+    res.send("success");
   });
 });
 
@@ -97,10 +87,7 @@ app.put("/product/:id", (req, res) => {
 app.delete("/product/:id", (req, res) => {
   readProduct((productArr) => {
     const updateArr = productArr.filter((item) => item.id !== +req.params.id);
-    fs.writeFile("product.json", JSON.stringify(updateArr), (err) => {
-      console.log(err);
-      res.send("yes");
-    });
+    writeProduct(updateArr);
   });
 });
 
