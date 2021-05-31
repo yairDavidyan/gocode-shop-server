@@ -2,13 +2,22 @@ const express = require("express");
 const app = express();
 const fs = require("fs");
 app.use(express.json());
+const mongoose = require("mongoose");
+
+const ProductSchema = mongoose.Schema({
+  title: String,
+  price: Number,
+  description: String,
+  category: String,
+  image: String,
+});
+
+const Product = mongoose.model("Product", ProductSchema);
 
 function readProduct(callback) {
-  fs.readFile("product.json", "utf8", (err, products) => {
-    console.log(err);
-    const productArr = JSON.parse(products);
-    callback(productArr);
-  });
+  Product.find({})
+    .exec()
+    .then((productArr) => callback(productArr));
 }
 
 function writeProduct(products) {
@@ -47,17 +56,14 @@ app.get("/product", (req, res) => {
 
 //add new product
 app.post("/product", (req, res) => {
-  readProduct((products) => {
-    products.push({
-      id: products.length + 1,
-      title: req.body.title,
-      price: 109.95,
-      description: "blabla",
-      category: "men's clothing",
-      image: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
-    });
-    writeProduct(products);
-    res.send("success");
+  Product.insertMany({
+    title: req.body.title,
+    price: 109.95,
+    description: "blabla",
+    category: "men's clothing",
+    image: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
+  }).then((addProduct) => {
+    res.send(addProduct);
   });
 });
 
@@ -107,5 +113,14 @@ app.delete("/product/:id", (req, res) => {
 //     }
 //   });
 // });
-
-app.listen(8080);
+mongoose
+  .connect("mongodb://localhost/gocod-shop", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
+  })
+  .then(() => {
+    console.log("connect");
+    app.listen(8080);
+  });
