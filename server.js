@@ -1,6 +1,5 @@
 const express = require("express");
 const app = express();
-const fs = require("fs");
 app.use(express.json());
 const mongoose = require("mongoose");
 
@@ -18,12 +17,6 @@ function readProduct(callback) {
   Product.find({})
     .exec()
     .then((productArr) => callback(productArr));
-}
-
-function writeProduct(products) {
-  fs.writeFile("product.json", JSON.stringify(products), (err) => {
-    console.log(err);
-  });
 }
 
 //filter by id
@@ -71,11 +64,11 @@ app.post("/product", (req, res) => {
 app.put("/product/:id", (req, res) => {
   const { id } = req.params;
   const { title, price, category, description, image } = req.body;
+
   readProduct((products) => {
-    const updateArr = products.map((item) =>
-      item.id === +id
+    products.map((item) =>
+      item.id === id
         ? {
-            id,
             price: price ? price : item.price,
             title: title ? title : item.title,
             category: category ? category : item.category,
@@ -84,7 +77,6 @@ app.put("/product/:id", (req, res) => {
           }
         : item
     );
-    writeProduct(updateArr);
     res.send("success");
   });
 });
@@ -92,8 +84,8 @@ app.put("/product/:id", (req, res) => {
 //dalete product
 app.delete("/product/:id", (req, res) => {
   readProduct((products) => {
-    const updateArr = products.filter((item) => item.id !== +req.params.id);
-    writeProduct(updateArr);
+    const updateArr = products.find((item) => item.id !== req.params.id);
+    Product.deleteMany({ updateArr }).then((deleteProduct) => res.send("yes"));
   });
 });
 // filter by slider
