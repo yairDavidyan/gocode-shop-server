@@ -5,6 +5,7 @@ app.use(express.json());
 
 function readProduct(callback) {
   fs.readFile("product.json", "utf8", (err, products) => {
+    console.log(err);
     const productArr = JSON.parse(products);
     callback(productArr);
   });
@@ -20,7 +21,6 @@ function writeProduct(products) {
 app.get("/product/:id", (req, res) => {
   readProduct((products) => {
     const product = products.find((item) => item.id === +req.params.id);
-    console.log(product);
     if (product) {
       res.send(product);
     } else {
@@ -32,31 +32,31 @@ app.get("/product/:id", (req, res) => {
 
 //filter by title search
 app.get("/product", (req, res) => {
-  readProduct((productArr) => {
+  readProduct((products) => {
     const { q } = req.query;
     if (q) {
-      let updateArr = productArr.filter(
+      let updateArr = products.filter(
         (item) => item.title.includes(q) || item.description.includes(q)
       );
       res.send(updateArr ? updateArr : "no data");
     } else {
-      res.send(productArr);
+      res.send(products);
     }
   });
 });
 
 //add new product
 app.post("/product", (req, res) => {
-  readProduct((productArr) => {
-    productArr.push({
-      id: productArr.length + 1,
+  readProduct((products) => {
+    products.push({
+      id: products.length + 1,
       title: req.body.title,
       price: 109.95,
       description: "blabla",
       category: "men's clothing",
       image: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
     });
-    writeProduct(productArr);
+    writeProduct(products);
     res.send("success");
   });
 });
@@ -65,8 +65,8 @@ app.post("/product", (req, res) => {
 app.put("/product/:id", (req, res) => {
   const { id } = req.params;
   const { title, price, category, description, image } = req.body;
-  readProduct((productArr) => {
-    const updateArr = productArr.map((item) =>
+  readProduct((products) => {
+    const updateArr = products.map((item) =>
       item.id === +id
         ? {
             id,
@@ -85,8 +85,8 @@ app.put("/product/:id", (req, res) => {
 
 //dalete product
 app.delete("/product/:id", (req, res) => {
-  readProduct((productArr) => {
-    const updateArr = productArr.filter((item) => item.id !== +req.params.id);
+  readProduct((products) => {
+    const updateArr = products.filter((item) => item.id !== +req.params.id);
     writeProduct(updateArr);
   });
 });
