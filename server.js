@@ -69,7 +69,7 @@ app.put("/product/:id", (req, res) => {
   readProduct((products) => {
     products.map((item) =>
       item.id === id
-        ? Product.updateMany({
+        ? Product.updateOne({
             price: price ? price : item.price,
             title: title ? title : item.title,
             category: category ? category : item.category,
