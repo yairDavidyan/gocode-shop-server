@@ -20,6 +20,7 @@ function writeProduct(products) {
 app.get("/product/:id", (req, res) => {
   readProduct((products) => {
     const product = products.find((item) => item.id === +req.params.id);
+    console.log(product);
     if (product) {
       res.send(product);
     } else {
