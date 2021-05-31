@@ -22,7 +22,7 @@ function readProduct(callback) {
 //filter by id
 app.get("/product/:id", (req, res) => {
   readProduct((products) => {
-    const product = products.find((item) => item.id === +req.params.id);
+    const product = products.find((item) => item.id === req.params.id);
     if (product) {
       res.send(product);
     } else {
@@ -63,21 +63,21 @@ app.post("/product", (req, res) => {
 //update product
 app.put("/product/:id", (req, res) => {
   const { id } = req.params;
+  console.log(id);
   const { title, price, category, description, image } = req.body;
 
   readProduct((products) => {
     products.map((item) =>
       item.id === id
-        ? {
+        ? Product.updateMany({
             price: price ? price : item.price,
             title: title ? title : item.title,
             category: category ? category : item.category,
             description: description ? description : item.description,
             image: image ? image : item.image,
-          }
+          }).then((updateProduct) => res.send("yes"))
         : item
     );
-    res.send("success");
   });
 });
 
