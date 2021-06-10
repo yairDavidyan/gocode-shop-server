@@ -4,6 +4,9 @@ app.use(express.json());
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const model = mongoose.model;
+require("dotenv").config();
+
+app.use(express.static("client/build"));
 
 const CustomerSchema = Schema({
   name: String,
@@ -45,7 +48,7 @@ function readProduct(callback) {
     .then((productArr) => callback(productArr));
 }
 //filter by id
-app.get("/product/:id", (req, res) => {
+app.get("/api/product/:id", (req, res) => {
   const { id } = req.params;
   Product.findById(id)
     .then((product) => res.send(product))
@@ -56,7 +59,7 @@ app.get("/product/:id", (req, res) => {
 });
 
 //add new product
-app.post("/product", (req, res) => {
+app.post("/api/product", (req, res) => {
   Product.insertMany([
     {
       title: req.body.title,
@@ -71,7 +74,7 @@ app.post("/product", (req, res) => {
 });
 
 //filter by title search
-app.get("/product", (req, res) => {
+app.get("/api/product", (req, res) => {
   readProduct((products) => {
     const { title, category } = req.query;
     console.log(title);
@@ -87,7 +90,7 @@ app.get("/product", (req, res) => {
 });
 
 //update product
-app.put("/product/:id", (req, res) => {
+app.put("/api/product/:id", (req, res) => {
   const { id } = req.params;
   console.log(id);
   const { title, price, category, description, image } = req.body;
@@ -100,14 +103,14 @@ app.put("/product/:id", (req, res) => {
             category: category ? category : item.category,
             description: description ? description : item.description,
             image: image ? image : item.image,
-          }).then((updateProduct) => res.send("yes"))
+          }).then((updateProduct) => res.send(updateProduct))
         : item
     );
   });
 });
 
 //dalete product
-app.delete("/product/:id", (req, res) => {
+app.delete("/api/product/:id", (req, res) => {
   readProduct((products) => {
     const updateArr = products.find((item) => item.id !== req.params.id);
     Product.deleteMany({ updateArr }).then((deleteProduct) => res.send("yes"));
@@ -207,14 +210,21 @@ app.post("/order", (req, res) => {
 //     }
 //   });
 // });
+
+app.get("*", (req, res) => {
+  res.sendFile(__dirname + "/client/build/index.html");
+});
 mongoose
-  .connect("mongodb://localhost/gocod-shop", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-    useCreateIndex: true,
-  })
+  .connect(
+    `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_NAME}?retryWrites=true&w=majority`,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useFindAndModify: false,
+      useCreateIndex: true,
+    }
+  )
   .then(() => {
     console.log("connect");
-    app.listen(8080);
+    app.listen(process.env.PORT || 8080);
   });
